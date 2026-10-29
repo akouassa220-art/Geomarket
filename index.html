@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geomarket — Données géospatiales de Côte d'Ivoire</title>
+<meta name="description" content="Limites administratives, imagerie satellite d'Abidjan, réseau routier et points d'intérêt. Données géospatiales prêtes à l'emploi pour la Côte d'Ivoire, avec API illimitée.">
+<meta name="theme-color" content="#14211b">
+<meta property="og:title" content="Geomarket — Données géospatiales de Côte d'Ivoire">
+<meta property="og:description" content="Jeux de données SIG vérifiés pour la Côte d'Ivoire, dès 15 € par mois, API illimitée incluse.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23e07a1f'/%3E%3Cpath d='M16 1a15 15 0 0 1 0 30z' fill='%232f7a4f'/%3E%3C/svg%3E">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Geomarket",
+  "email": "contact@geomarket.ci",
+  "address": { "@type": "PostalAddress", "addressLocality": "Abidjan", "addressCountry": "CI" },
+  "description": "Données géospatiales vérifiées pour la Côte d'Ivoire."
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<style>
+:root{
+  --ink:#14211b; --ink-2:#1d2e26; --paper:#f4efe4; --paper-2:#ebe3d2;
+  --ochre:#e07a1f; --ochre-2:#f29a45; --green:#2f7a4f; --line:rgba(20,33,27,.14);
+  --muted:#5d6a62; --card:#fffaf0; --radius:14px;
+  --serif:"Fraunces",Georgia,serif; --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img,svg{max-width:100%}
+:focus-visible{outline:2px solid var(--ochre);outline-offset:3px;border-radius:4px}
+.skip{position:absolute;left:-9999px;top:8px;background:var(--ochre);color:var(--ink);padding:10px 16px;border-radius:8px;z-index:2000}
+.skip:focus{left:12px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.mono{font-family:var(--mono);font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+
+/* Nav */
+nav{position:sticky;top:0;z-index:1000;background:rgba(20,33,27,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--paper);transition:box-shadow .25s,background .25s}
+nav.scrolled{background:rgba(20,33,27,.98);box-shadow:0 10px 30px -12px rgba(0,0,0,.5)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.logo{font-family:var(--serif);font-weight:700;font-size:1.35rem;text-decoration:none;display:flex;gap:10px;align-items:center}
+.logo i{width:22px;height:22px;border-radius:50%;background:conic-gradient(var(--ochre) 0 33%,var(--paper) 0 66%,var(--green) 0);display:inline-block}
+.links{display:flex;gap:28px;font-size:.92rem}
+.links a{text-decoration:none;opacity:.78;position:relative;padding:4px 0;transition:opacity .2s}
+.links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--ochre);transform:scaleX(0);transform-origin:left;transition:transform .25s}
+.links a:hover,.links a.active{opacity:1}
+.links a.active::after,.links a:hover::after{transform:scaleX(1)}
+.burger{display:none;background:none;border:0;color:var(--paper);cursor:pointer;width:44px;height:44px;align-items:center;justify-content:center}
+.burger span,.burger span::before,.burger span::after{display:block;width:22px;height:2px;background:currentColor;border-radius:2px;position:relative;transition:transform .25s,opacity .25s}
+.burger span::before,.burger span::after{content:"";position:absolute;left:0}
+.burger span::before{top:-7px}.burger span::after{top:7px}
+nav.open .burger span{background:transparent}
+nav.open .burger span::before{transform:translateY(7px) rotate(45deg)}
+nav.open .burger span::after{transform:translateY(-7px) rotate(-45deg)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:999px;font-weight:600;font-size:.92rem;text-decoration:none;border:0;cursor:pointer;font-family:inherit;transition:transform .15s,background .2s,color .2s,box-shadow .2s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-primary{background:var(--ochre);color:var(--ink)}.btn-primary:hover{background:var(--ochre-2);box-shadow:0 10px 24px -10px rgba(224,122,31,.8)}
+.btn-ghost{border:1px solid rgba(244,239,228,.35);color:var(--paper)}.btn-ghost:hover{background:rgba(244,239,228,.08)}
+.btn-dark{background:var(--ink);color:var(--paper)}.btn-dark:hover{background:var(--ink-2)}
+
+/* Hero */
+.hero{background:var(--ink);color:var(--paper);position:relative;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-1;background:
+  radial-gradient(600px 300px at 85% 10%,rgba(47,122,79,.28),transparent 70%),
+  radial-gradient(500px 300px at 0% 100%,rgba(224,122,31,.16),transparent 70%)}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center;padding-top:72px;padding-bottom:88px}
+.hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.4rem,5vw,4.2rem);line-height:1.04;letter-spacing:-.02em}
+.hero h1 em{font-style:italic;color:var(--ochre-2)}
+.hero p.lead{margin:22px 0 32px;font-size:1.12rem;color:rgba(244,239,228,.75);max-width:520px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+.coords{margin-top:40px;display:flex;gap:28px;flex-wrap:wrap;color:rgba(244,239,228,.5)}
+.coords b{display:block;color:var(--paper);font-family:var(--serif);font-size:1.6rem;font-weight:500;text-transform:none;letter-spacing:0;font-variant-numeric:tabular-nums}
+#map{height:480px;border-radius:var(--radius);border:1px solid rgba(244,239,228,.15);box-shadow:0 30px 80px -20px rgba(0,0,0,.6)}
+.map-card{position:relative}
+.map-tag{position:absolute;z-index:500;left:16px;bottom:16px;background:var(--paper);color:var(--ink);padding:10px 14px;border-radius:10px;font-size:.82rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.map-tag .mono{color:var(--muted);font-size:.68rem}
+.leaflet-container{background:#0f1a15;font-family:var(--sans)}
+
+/* Sections */
+section{padding:96px 0}
+.eyebrow{color:var(--ochre);margin-bottom:14px}
+h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.9rem,3.5vw,2.8rem);line-height:1.1;letter-spacing:-.015em;max-width:700px}
+.sub{color:var(--muted);max-width:620px;margin-top:14px;font-size:1.05rem}
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* Catalogue */
+.tools{display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:36px 0 24px}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:transparent;padding:8px 16px;border-radius:999px;font:inherit;font-size:.88rem;cursor:pointer;color:var(--ink);transition:background .2s,color .2s,border-color .2s}
+.chip:hover{border-color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.search{position:relative;min-width:260px;flex:0 1 320px}
+.search input{width:100%;font:inherit;font-size:.92rem;padding:11px 16px 11px 40px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);transition:border-color .2s,box-shadow .2s}
+.search input:focus{outline:none;border-color:var(--ochre);box-shadow:0 0 0 4px rgba(224,122,31,.18)}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.count{color:var(--muted);margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;gap:12px;transition:transform .2s,box-shadow .2s,border-color .2s;animation:fadeUp .5s both;animation-delay:calc(var(--i,0) * 60ms)}
+.card:hover{transform:translateY(-3px);box-shadow:0 18px 40px -18px rgba(20,33,27,.35);border-color:rgba(20,33,27,.25)}
+.card .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kind{font-family:var(--mono);font-size:.7rem;padding:4px 8px;border-radius:6px;background:var(--paper-2)}
+.kind.raster{background:#f7dcc0}
+.card h3{font-family:var(--serif);font-weight:500;font-size:1.3rem;line-height:1.2}
+.card p{color:var(--muted);font-size:.92rem;flex:1}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:.78rem;border-top:1px dashed var(--line);padding-top:12px}
+.meta span{color:var(--muted)}
+.price{display:flex;justify-content:space-between;align-items:baseline}
+.price b{font-family:var(--serif);font-size:1.5rem;font-weight:500}
+.price small{color:var(--muted)}
+.empty{grid-column:1/-1;text-align:center;padding:48px 16px;color:var(--muted);border:1px dashed var(--line);border-radius:var(--radius)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* Démographie */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0 44px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.kpi b{display:block;font-family:var(--serif);font-weight:500;font-size:1.9rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{color:var(--muted);font-size:.88rem}
+.levels{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.dem-list{display:grid;gap:12px}
+.dem-row{display:grid;grid-template-columns:minmax(200px,1.1fr) 2fr auto;gap:18px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;animation:fadeUp .45s both;animation-delay:calc(var(--i,0) * 45ms)}
+.dem-row .nm{font-weight:600}
+.dem-row .nm small{display:block;color:var(--muted);font-weight:400;font-size:.8rem}
+.bar{height:10px;background:var(--paper-2);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:var(--w,0%);background:linear-gradient(90deg,var(--green),var(--ochre));border-radius:999px;transition:width 1s cubic-bezier(.2,.7,.2,1)}
+.dem-row .val{font-family:var(--serif);font-size:1.2rem;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dem-row .val small{display:block;font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.dem-note{margin-top:22px;color:var(--muted);font-size:.85rem}
+@media (max-width:900px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .dem-row{grid-template-columns:1fr auto}
+  .dem-row .bar{grid-column:1/-1;grid-row:2}
+}
+@media (max-width:560px){.kpis{grid-template-columns:1fr}}
+
+/* Commodités */
+#commap{height:520px;border-radius:var(--radius);border:1px solid var(--line);margin-top:28px;background:#0f1a15;box-shadow:0 24px 60px -30px rgba(20,33,27,.5)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.com-count{opacity:.55;margin-left:8px;font-family:var(--mono);font-size:.75rem}
+.com-note{margin-top:14px;color:var(--muted);font-size:.85rem}
+@media (max-width:900px){#commap{height:400px}}
+/* Fond de carte OpenStreetMap, assombri pour s'accorder au thème */
+#map .leaflet-tile-pane,#commap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.95)}
+
+/* Licences */
+.dark{background:var(--ink-2);color:var(--paper)}
+.dark .sub{color:rgba(244,239,228,.65)}
+.plans{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:48px}
+.plan{position:relative;border:1px solid rgba(244,239,228,.15);border-radius:var(--radius);padding:26px;display:flex;flex-direction:column;transition:transform .2s,border-color .2s}
+.plan:hover{transform:translateY(-4px);border-color:rgba(244,239,228,.35)}
+.plan.hot{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.plan.hot:hover{border-color:var(--paper)}
+.badge{position:absolute;top:-12px;right:20px;background:var(--ochre);color:var(--ink);font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;padding:5px 10px;border-radius:999px;font-weight:500}
+.plan h3{font-family:var(--serif);font-weight:500;font-size:1.4rem}
+.plan .amt{font-family:var(--serif);font-size:2.6rem;margin:14px 0 2px;font-variant-numeric:tabular-nums}
+.plan .amt small{font-family:var(--sans);font-size:.9rem;opacity:.6}
+.plan .xof{font-size:.82rem;opacity:.6;margin-bottom:20px}
+.plan ul{list-style:none;display:grid;gap:10px;font-size:.9rem;flex:1;margin-bottom:24px}
+.plan li::before{content:"→ ";color:var(--ochre)}
+.plan li.no{opacity:.4}.plan li.no::before{content:"× "}
+.plan .btn{width:100%}
+.pay{margin-top:28px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:rgba(244,239,228,.6);font-size:.88rem}
+.pay span.p{border:1px solid rgba(244,239,228,.2);padding:6px 12px;border-radius:8px;color:var(--paper)}
+
+/* API */
+.split{display:grid;grid-template-columns:1fr 1.1fr;gap:56px;align-items:center}
+pre{background:var(--ink);color:#d9e4dc;border-radius:var(--radius);padding:26px;font-family:var(--mono);font-size:.82rem;line-height:1.7;overflow-x:auto;box-shadow:0 24px 60px -30px rgba(20,33,27,.6);border:1px solid var(--line)}
+pre .c{color:#7c9a88}pre .k{color:var(--ochre-2)}pre .s{color:#a9d6b5}
+.feat{display:grid;gap:18px;margin-top:28px}
+.feat div{display:flex;gap:14px}
+.feat b{display:block}
+.feat .n{font-family:var(--mono);color:var(--ochre);font-size:.8rem;padding-top:3px}
+
+/* Contribution steps */
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:48px;border-top:2px solid var(--ink)}
+.step{padding:22px 18px 0 0;position:relative}
+.step::before{content:"";position:absolute;top:-8px;left:0;width:14px;height:14px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);transition:background .3s}
+.step:hover::before{background:var(--ochre);border-color:var(--ochre)}
+.step:last-child::before{background:var(--green);border-color:var(--green)}
+.step h4{font-family:var(--serif);font-weight:500;font-size:1.15rem;margin:8px 0 6px}
+.step p{font-size:.88rem;color:var(--muted)}
+
+/* CTA + footer */
+.final{background:var(--ochre);color:var(--ink);text-align:center}
+.final h2{margin:0 auto}
+.final p{margin:16px auto 30px;max-width:520px}
+footer{background:var(--ink);color:rgba(244,239,228,.6);padding:48px 0;font-size:.88rem}
+footer .wrap{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+footer .logo{color:var(--paper)}
+footer nav.fl{display:flex;gap:20px;flex-wrap:wrap}
+footer nav.fl a{text-decoration:none}
+footer nav.fl a:hover{color:var(--paper)}
+footer a{transition:color .2s}
+
+@media (max-width:900px){
+  .burger{display:flex}
+  .links{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;gap:0;background:var(--ink);padding:8px 24px 18px;border-top:1px solid rgba(244,239,228,.1);box-shadow:0 20px 40px -20px rgba(0,0,0,.6)}
+  nav.open .links{display:flex}
+  .links a{padding:14px 0;border-bottom:1px solid rgba(244,239,228,.08);opacity:.9}
+  .links a::after{display:none}
+  .hero .wrap,.split{grid-template-columns:1fr}
+  #map{height:340px}
+  .plans{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:1fr;border-top:0;border-left:2px solid var(--ink);margin-left:8px}
+  .step{padding:0 0 26px 24px}.step::before{top:2px;left:-8px}
+  section{padding:72px 0}
+  .search{flex:1 1 100%;min-width:0}
+}
+@media (max-width:560px){
+  .plans{grid-template-columns:1fr}
+  .coords{gap:18px}
+  .nav-cta{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip">Aller au contenu</a>
+
+<nav id="nav" aria-label="Navigation principale">
+  <div class="wrap">
+    <a href="#top" class="logo" aria-label="Geomarket, accueil"><i></i>Geomarket</a>
+    <div class="links" id="menu">
+      <a href="#catalogue">Catalogue</a>
+      <a href="#demographie">Démographie</a>
+      <a href="#commodites">Commodités</a>
+      <a href="#licences">Licences</a>
+      <a href="#api">API</a>
+      <a href="#contribuer">Contribuer</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <a href="#licences" class="btn btn-primary nav-cta">S'abonner</a>
+      <button class="burger" id="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="menu"><span></span></button>
+    </div>
+  </div>
+</nav>
+
+<main id="main">
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <p class="mono eyebrow">Données géospatiales · Côte d'Ivoire</p>
+      <h1>Le territoire ivoirien, <em>prêt à cartographier.</em></h1>
+      <p class="lead">Limites administratives, imagerie satellite d'Abidjan, réseau routier et points d'intérêt. Des données vérifiées, documentées et livrées en GeoPackage, COG ou par API.</p>
+      <div class="cta">
+        <a href="#catalogue" class="btn btn-primary">Explorer le catalogue</a>
+        <a href="#api" class="btn btn-ghost">Voir l'API</a>
+      </div>
+      <div class="coords mono">
+        <div><b data-count="0" id="stat-datasets">0</b>jeux de données</div>
+        <div><b>EPSG:4326</b>et UTM 30N</div>
+        <div><b>∞</b>requêtes API</div>
+      </div>
+    </div>
+    <div class="map-card">
+      <div id="map" role="img" aria-label="Carte interactive de la Côte d'Ivoire centrée sur Abidjan"></div>
+      <div class="map-tag"><div class="mono">Aperçu</div><b>Abidjan · 5,36° N, 4,01° O</b></div>
+    </div>
+  </div>
+</header>
+
+<section id="catalogue">
+  <div class="wrap reveal">
+    <p class="mono eyebrow">Catalogue</p>
+    <h2>Des jeux de données préparés par notre équipe SIG.</h2>
+    <p class="sub">Chaque couche est contrôlée (géométries, système de coordonnées, attributs) et livrée avec ses métadonnées : source, licence, échelle et date de mise à jour.</p>
+    <div class="tools">
+      <div class="filters" id="filters" role="group" aria-label="Filtrer par catégorie">
+        <button class="chip on" data-f="all" aria-pressed="true">Tout</button>
+        <button class="chip" data-f="admin" aria-pressed="false">Limites administratives</button>
+        <button class="chip" data-f="imagerie" aria-pressed="false">Imagerie</button>
+        <button class="chip" data-f="transport" aria-pressed="false">Transport</button>
+        <button class="chip" data-f="poi" aria-pressed="false">Points d'intérêt</button>
+      </div>
+      <label class="search">
+        <span class="sr-only" style="position:absolute;left:-9999px">Rechercher un jeu de données</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Rechercher un jeu de données…" autocomplete="off">
+      </label>
+    </div>
+    <p class="count mono" id="count" aria-live="polite"></p>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section id="demographie">
+  <div class="wrap reveal">
+    <p class="mono eyebrow">Démographie</p>
+    <h2>La population ivoirienne, de la nation aux villes.</h2>
+    <p class="sub">Résultats définitifs du 5<sup>e</sup> Recensement général de la population et de l'habitat (RGPH 2021), population résidente au 14 décembre 2021.</p>
+
+    <h3 class="mono" style="margin-top:44px;color:var(--muted)">Niveau national</h3>
+    <div class="kpis">
+      <div class="kpi"><b>29 389 150</b><span>habitants</span></div>
+      <div class="kpi"><b>22 840 165</b><span>Ivoiriens (78 %), 6 435 835 non-Ivoiriens (22 %)</span></div>
+      <div class="kpi"><b>52,2 %</b><span>d'hommes (15 344 990), 47,8 % de femmes</span></div>
+      <div class="kpi"><b>5 616 487</b><span>ménages, 5,2 personnes en moyenne</span></div>
+      <div class="kpi"><b>91,1</b><span>habitants par km² (48 en 1998)</span></div>
+      <div class="kpi"><b>75,6 %</b><span>de la population a moins de 35 ans</span></div>
+    </div>
+
+    <h3 class="mono" style="color:var(--muted);margin-bottom:16px">Par échelle administrative</h3>
+    <div class="filters levels" id="levels" role="group" aria-label="Choisir l'échelle administrative">
+      <button class="chip on" data-l="dis" aria-pressed="true">Districts</button>
+      <button class="chip" data-l="reg" aria-pressed="false">Régions</button>
+      <button class="chip" data-l="vil" aria-pressed="false">Villes</button>
+      <button class="chip" data-l="dep" aria-pressed="false">Départements &amp; sous-préfectures</button>
+    </div>
+    <div class="search" style="margin-bottom:18px;max-width:420px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="dq" placeholder="Rechercher une localité…" aria-label="Rechercher une localité" autocomplete="off">
+    </div>
+    <div class="dem-list" id="demo-list"></div>
+    <p class="dem-note" id="demo-note"></p>
+    <p class="dem-note" id="demo-source">Source : RGPH 2021, Institut national de la statistique (INS).</p>
+  </div>
+</section>
+
+<section id="commodites">
+  <div class="wrap reveal">
+    <p class="mono eyebrow">Commodités</p>
+    <h2>Services et équipements, sur une seule carte.</h2>
+    <p class="sub">Hôpitaux, écoles, marchés, banques, points d'eau, administrations... Choisissez les catégories à afficher et zoomez pour voir chaque établissement.</p>
+    <div class="filters" id="com-chips" role="group" aria-label="Filtrer les commodités par catégorie" style="margin-top:32px"></div>
+    <div id="commap" role="region" aria-label="Carte des commodités"></div>
+    <p class="com-note" id="com-note">Chargement des données…</p>
+  </div>
+</section>
+
+<section id="licences" class="dark">
+  <div class="wrap reveal">
+    <p class="mono eyebrow">Licences</p>
+    <h2>Un abonnement par jeu de données. Sans engagement.</h2>
+    <p class="sub">Choisissez le niveau d'usage dont vous avez besoin. L'API illimitée est incluse dès la licence API.</p>
+    <div class="plans">
+      <div class="plan">
+        <h3>Lecture</h3><div class="amt">15 € <small>/mois</small></div><div class="xof">≈ 9 800 FCFA</div>
+        <ul><li>Visualisation sur la carte web</li><li>Fiche de métadonnées</li><li class="no">Téléchargement</li><li class="no">API</li></ul>
+        <a href="mailto:contact@geomarket.ci?subject=Abonnement%20Lecture" class="btn btn-ghost">Choisir</a>
+      </div>
+      <div class="plan">
+        <h3>Téléchargement</h3><div class="amt">25 € <small>/mois</small></div><div class="xof">≈ 16 400 FCFA</div>
+        <ul><li>Tout ce qu'offre Lecture</li><li>10 exports par mois</li><li>GPKG, SHP, GeoJSON, COG</li><li class="no">API</li></ul>
+        <a href="mailto:contact@geomarket.ci?subject=Abonnement%20T%C3%A9l%C3%A9chargement" class="btn btn-ghost">Choisir</a>
+      </div>
+      <div class="plan hot">
+        <span class="badge">Recommandé</span>
+        <h3>API</h3><div class="amt">35 € <small>/mois</small></div><div class="xof">≈ 23 000 FCFA</div>
+        <ul><li>Tout ce qu'offre Téléchargement</li><li>API REST illimitée</li><li>Tuiles vectorielles et raster</li><li>5 clés API</li></ul>
+        <a href="mailto:contact@geomarket.ci?subject=Abonnement%20API" class="btn btn-dark">Choisir</a>
+      </div>
+      <div class="plan">
+        <h3>Redistribution</h3><div class="amt">45 € <small>/mois</small></div><div class="xof">≈ 29 500 FCFA</div>
+        <ul><li>Tout ce qu'offre API</li><li>Intégration dans vos produits</li><li>Revente à vos clients</li><li>Attribution requise</li></ul>
+        <a href="mailto:contact@geomarket.ci?subject=Abonnement%20Redistribution" class="btn btn-ghost">Choisir</a>
+      </div>
+    </div>
+    <div class="pay">Paiement par <span class="p">Carte bancaire</span><span class="p">Orange Money</span><span class="p">MTN MoMo</span><span class="p">Wave</span><span class="p">Moov Money</span></div>
+  </div>
+</section>
+
+<section id="api">
+  <div class="wrap split reveal">
+    <div>
+      <p class="mono eyebrow">API</p>
+      <h2>Interrogez le territoire depuis votre code.</h2>
+      <p class="sub">Une API REST simple, des tuiles prêtes pour Leaflet et MapLibre, et des téléchargements par lien sécurisé.</p>
+      <div class="feat">
+        <div><span class="n">01</span><p><b>Requêtes spatiales</b>Filtrez par emprise, par commune ou par attribut.</p></div>
+        <div><span class="n">02</span><p><b>Tuiles vectorielles et COG</b>Un affichage fluide, même pour l'imagerie haute résolution.</p></div>
+        <div><span class="n">03</span><p><b>Clés API révocables</b>Gérez vos clés et suivez votre usage depuis votre espace.</p></div>
+      </div>
+    </div>
+<pre><span class="c"># Routes bitumées dans la commune de Cocody</span>
+<span class="k">curl</span> https://api.geomarket.ci/v1/datasets/routes-civ/features \
+  -H <span class="s">"X-API-Key: gm_live_xxxxxxxx"</span> \
+  -G -d <span class="s">"commune=cocody"</span> -d <span class="s">"revetement=bitume"</span>
+
+<span class="c"># Réponse (GeoJSON)</span>
+{
+  <span class="s">"type"</span>: <span class="s">"FeatureCollection"</span>,
+  <span class="s">"features"</span>: [{
+    <span class="s">"properties"</span>: {
+      <span class="s">"nom"</span>: <span class="s">"Boulevard Latrille"</span>,
+      <span class="s">"classe"</span>: <span class="s">"primaire"</span>
+    },
+    <span class="s">"geometry"</span>: { <span class="s">"type"</span>: <span class="s">"MultiLineString"</span>, … }
+  }]
+}</pre>
+  </div>
+</section>
+
+<section id="contribuer">
+  <div class="wrap reveal">
+    <p class="mono eyebrow">Contribuer</p>
+    <h2>Vous avez des données de terrain ? Partagez-les.</h2>
+    <p class="sub">Les contributions sont contrôlées automatiquement, puis validées par un modérateur avant d'être publiées.</p>
+    <ol class="steps" style="list-style:none">
+      <li class="step"><span class="mono">Étape 1</span><h4>Soumission</h4><p>Envoyez un fichier GPKG, GeoJSON, SHP ou CSV.</p></li>
+      <li class="step"><span class="mono">Étape 2</span><h4>Contrôle automatique</h4><p>Géométries, système de coordonnées, attributs, emprise.</p></li>
+      <li class="step"><span class="mono">Étape 3</span><h4>Revue</h4><p>Un modérateur vérifie la carte et les doublons.</p></li>
+      <li class="step"><span class="mono">Étape 4</span><h4>Approbation</h4><p>Vous recevez une notification et votre attribution.</p></li>
+      <li class="step"><span class="mono">Étape 5</span><h4>Publication</h4><p>Vos données rejoignent le catalogue.</p></li>
+    </ol>
+    <p style="margin-top:40px"><a href="mailto:contact@geomarket.ci?subject=Proposer%20des%20donn%C3%A9es" class="btn btn-dark">Proposer des données</a></p>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap reveal">
+    <h2>Commencez votre projet SIG dès aujourd'hui.</h2>
+    <p>Un abonnement par jeu de données, résiliable à tout moment. Payez par carte ou par Mobile Money.</p>
+    <a href="mailto:contact@geomarket.ci" class="btn btn-dark">Nous contacter</a>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <a href="#top" class="logo"><i></i>Geomarket</a>
+    <nav class="fl" aria-label="Pied de page">
+      <a href="#catalogue">Catalogue</a><a href="#demographie">Démographie</a><a href="#commodites">Commodités</a><a href="#licences">Licences</a><a href="#api">API</a><a href="#contribuer">Contribuer</a>
+    </nav>
+    <div>Abidjan, Côte d'Ivoire · <a href="mailto:contact@geomarket.ci">contact@geomarket.ci</a></div>
+    <div>© 2026 Geomarket. Fond de carte © OpenStreetMap contributors.</div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script>
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Catalogue ---------- */
+const datasets=[
+ {c:"admin",k:"vector",t:"Limites administratives",d:"Districts, régions, départements, sous-préfectures et communes.",src:"CNTIG",ech:"1:50 000",maj:"09/2026",p:15},
+ {c:"admin",k:"vector",t:"Communes du Grand Abidjan",d:"Les 13 communes avec leurs codes officiels et populations.",src:"INS / CNTIG",ech:"1:10 000",maj:"08/2026",p:15},
+ {c:"imagerie",k:"raster",t:"Imagerie satellite d'Abidjan",d:"Mosaïque orthorectifiée de la ville, sans nuages, livrée en COG.",src:"Sentinel-2",ech:"10 m",maj:"07/2026",p:35},
+ {c:"imagerie",k:"raster",t:"Modèle numérique de terrain",d:"Altitudes sur tout le territoire national, avec ombrage.",src:"Copernicus DEM",ech:"30 m",maj:"2025",p:25},
+ {c:"transport",k:"vector",t:"Réseau routier national",d:"Routes classées avec leur revêtement, numéro et état.",src:"Équipe Geomarket",ech:"1:25 000",maj:"10/2026",p:25},
+ {c:"transport",k:"vector",t:"Transports d'Abidjan",d:"Lignes de bus, gbakas, bateaux-bus et arrêts.",src:"Levé terrain",ech:"1:10 000",maj:"09/2026",p:30},
+ {c:"poi",k:"vector",t:"Établissements de santé",d:"Hôpitaux, CHU, centres de santé et pharmacies géolocalisés.",src:"Équipe Geomarket",ech:"Point",maj:"10/2026",p:20},
+ {c:"poi",k:"vector",t:"Écoles et universités",d:"Établissements primaires, secondaires et supérieurs.",src:"Équipe Geomarket",ech:"Point",maj:"08/2026",p:20},
+ {c:"poi",k:"vector",t:"Commerces et marchés",d:"Marchés, supermarchés et zones commerciales d'Abidjan.",src:"Contributions",ech:"Point",maj:"10/2026",p:20}
+];
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const state={cat:"all",q:""};
+const grid=document.getElementById("grid");
+const countEl=document.getElementById("count");
+
+function render(){
+  const q=state.q.trim().toLowerCase();
+  const list=datasets.filter(x=>
+    (state.cat==="all"||x.c===state.cat) &&
+    (!q || (x.t+" "+x.d+" "+x.src).toLowerCase().includes(q))
+  );
+  countEl.textContent=`${list.length} jeu${list.length>1?"x":""} de données affiché${list.length>1?"s":""}`;
+  grid.innerHTML = list.length ? list.map((x,i)=>`
+   <article class="card" style="--i:${i}">
+     <div class="top"><span class="kind ${x.k}">${x.k==="raster"?"RASTER · COG":"VECTEUR"}</span><span class="mono" style="color:var(--muted)">MàJ ${esc(x.maj)}</span></div>
+     <h3>${esc(x.t)}</h3><p>${esc(x.d)}</p>
+     <div class="meta"><span>Source</span><b>${esc(x.src)}</b><span>Échelle / résolution</span><b>${esc(x.ech)}</b></div>
+     <div class="price"><small>dès</small><b>${x.p} € <small>/mois</small></b></div>
+   </article>`).join("")
+   : `<div class="empty">Aucun jeu de données ne correspond à votre recherche.</div>`;
+}
+
+document.getElementById("filters").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  document.querySelectorAll(".chip").forEach(c=>{
+    const on=c===b; c.classList.toggle("on",on); c.setAttribute("aria-pressed",on);
+  });
+  state.cat=b.dataset.f; render();
+});
+document.getElementById("q").addEventListener("input",e=>{state.q=e.target.value; render();});
+render();
+
+/* ---------- Compteur animé ---------- */
+function animateCount(el,to,dur=1200){
+  if(reduceMotion){el.textContent=to;return;}
+  const start=performance.now();
+  const step=now=>{
+    const t=Math.min((now-start)/dur,1);
+    el.textContent=Math.round(to*(1-Math.pow(1-t,3)));
+    if(t<1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+animateCount(document.getElementById("stat-datasets"), datasets.length);
+
+/* ---------- Apparition au défilement ---------- */
+const io=new IntersectionObserver(entries=>{
+  entries.forEach(en=>{ if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+},{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+
+/* ---------- Navigation : ombre au défilement, lien actif, menu mobile ---------- */
+const nav=document.getElementById("nav");
+const burger=document.getElementById("burger");
+window.addEventListener("scroll",()=>nav.classList.toggle("scrolled",scrollY>10),{passive:true});
+
+burger.addEventListener("click",()=>{
+  const open=nav.classList.toggle("open");
+  burger.setAttribute("aria-expanded",open);
+  burger.setAttribute("aria-label",open?"Fermer le menu":"Ouvrir le menu");
+});
+document.querySelectorAll(".links a").forEach(a=>a.addEventListener("click",()=>{
+  nav.classList.remove("open"); burger.setAttribute("aria-expanded","false");
+}));
+
+const navLinks=[...document.querySelectorAll(".links a")];
+const secIO=new IntersectionObserver(entries=>{
+  entries.forEach(en=>{
+    if(!en.isIntersecting) return;
+    navLinks.forEach(a=>a.classList.toggle("active",a.getAttribute("href")==="#"+en.target.id));
+  });
+},{rootMargin:"-45% 0px -50% 0px"});
+["catalogue","demographie","commodites","licences","api","contribuer"].forEach(id=>secIO.observe(document.getElementById(id)));
+
+/* ---------- Démographie (RGPH 2021, INS — tableau « Résultats globaux » officiel) ---------- */
+const POP_NATIONALE=29389150;
+const fmtN=n=>n.toLocaleString("fr-FR").replace(/[\u202f\u00a0]/g," ");
+const fmtP=v=>(v/POP_NATIONALE*100).toFixed(1).replace(".",",")+" %";
+let demo={
+  dis:{note:"14 districts. Population résidente au 14 décembre 2021 ; le total de tous les districts donne la population nationale (29 389 150).",
+    items:[
+      {n:"District autonome d'Abidjan",v:6321017},
+      {n:"District du Bas-Sassandra",v:2687176},
+      {n:"District du Comoé",v:1501336},
+      {n:"District du Denguélé",v:436015},
+      {n:"District du Gôh-Djiboua",v:2088440},
+      {n:"District des Lacs",v:1488531},
+      {n:"District des Lagunes",v:2042623},
+      {n:"District des Montagnes",v:3027023},
+      {n:"District du Sassandra-Marahoué",v:2720876},
+      {n:"District des Savanes",v:2159434},
+      {n:"District de la Vallée du Bandama",v:1964929},
+      {n:"District du Woroba",v:1184813},
+      {n:"District autonome de Yamoussoukro",v:422072},
+      {n:"District du Zanzan",v:1344865}
+    ]},
+  reg:{note:"31 régions. Le Folon (0,5 %) est la plus petite, le District autonome d'Abidjan (21,5 %) le plus grand poids démographique.",
+    items:[
+      {n:"Gbôklé",v:460980,s:"Bas-Sassandra"},
+      {n:"Nawa",v:1165472,s:"Bas-Sassandra"},
+      {n:"San-Pédro",v:1060724,s:"Bas-Sassandra"},
+      {n:"Indénié-Djuablin",v:716443,s:"Comoé"},
+      {n:"Sud-Comoé",v:784893,s:"Comoé"},
+      {n:"Folon",v:146209,s:"Denguélé"},
+      {n:"Kabadougou",v:289806,s:"Denguélé"},
+      {n:"Gôh",v:985282,s:"Gôh-Djiboua"},
+      {n:"Lôh-Djiboua",v:1103158,s:"Gôh-Djiboua"},
+      {n:"Bélier",v:415593,s:"Lacs"},
+      {n:"Iffou",v:378560,s:"Lacs"},
+      {n:"Moronou",v:439755,s:"Lacs"},
+      {n:"N'Zi",v:254623,s:"Lacs"},
+      {n:"Agnéby-Tiassa",v:865951,s:"Lagunes"},
+      {n:"Grands-Ponts",v:450007,s:"Lagunes"},
+      {n:"La Mé",v:726665,s:"Lagunes"},
+      {n:"Cavally",v:708241,s:"Montagnes"},
+      {n:"Guémon",v:930873,s:"Montagnes"},
+      {n:"Tonkpi",v:1387909,s:"Montagnes"},
+      {n:"Haut-Sassandra",v:1739697,s:"Sassandra-Marahoué"},
+      {n:"Marahoué",v:981180,s:"Sassandra-Marahoué"},
+      {n:"Bagoué",v:515890,s:"Savanes"},
+      {n:"Poro",v:1040461,s:"Savanes"},
+      {n:"Tchologo",v:603084,s:"Savanes"},
+      {n:"Gbêkê",v:1352900,s:"Vallée du Bandama"},
+      {n:"Hambol",v:612029,s:"Vallée du Bandama"},
+      {n:"Bafing",v:262850,s:"Woroba"},
+      {n:"Béré",v:492151,s:"Woroba"},
+      {n:"Worodougou",v:429812,s:"Woroba"},
+      {n:"Bounkani",v:427037,s:"Zanzan"},
+      {n:"Gontougo",v:917828,s:"Zanzan"}
+    ]},
+  vil:{note:"Communes et sous-préfectures de plus de 100 000 habitants. La ville d'Abidjan (5 616 633 hab.) est répartie en 10 communes.",
+    items:[
+      {n:"Yopougon",v:1571065,s:"Commune d'Abidjan"},
+      {n:"Abobo",v:1340083,s:"Commune d'Abidjan"},
+      {n:"Cocody",v:692583,s:"Commune d'Abidjan"},
+      {n:"Port-Bouët",v:618795,s:"Commune d'Abidjan"},
+      {n:"Koumassi",v:412282,s:"Commune d'Abidjan"},
+      {n:"Adjamé",v:340892,s:"Commune d'Abidjan"},
+      {n:"Attécoubé",v:313135,s:"Commune d'Abidjan"},
+      {n:"Marcory",v:214061,s:"Commune d'Abidjan"},
+      {n:"Treichville",v:106552,s:"Commune d'Abidjan"},
+      {n:"Anyama",v:389592},
+      {n:"Bingerville",v:204656},
+      {n:"Bouaké",v:832371},
+      {n:"Korhogo",v:440926},
+      {n:"Daloa",v:421879},
+      {n:"San-Pédro",v:390654},
+      {n:"Yamoussoukro",v:340234},
+      {n:"Divo",v:294559},
+      {n:"Gagnoa",v:277044},
+      {n:"Man",v:241969},
+      {n:"Duékoué",v:220953},
+      {n:"Bouaflé",v:213967},
+      {n:"Ferkessédougou",v:160267},
+      {n:"Abengourou",v:164424},
+      {n:"Guiglo",v:171454},
+      {n:"Adzopé",v:156488},
+      {n:"Danané",v:131586},
+      {n:"Oumé",v:127153},
+      {n:"Sinfra",v:137210},
+      {n:"Agboville",v:135082},
+      {n:"Bondoukou",v:141568},
+      {n:"Dabou",v:138083},
+      {n:"Vavoua",v:132528},
+      {n:"Bloléquin",v:123133},
+      {n:"Issia",v:126252},
+      {n:"Grand-Bassam",v:124567},
+      {n:"Bonon",v:116871},
+      {n:"Zouan-Hounien",v:111099},
+      {n:"Séguéla",v:103980},
+      {n:"Aboisso",v:100903}
+    ]},
+  dep:{note:"111 départements, classés par population totale (RGPH 2021). Les sous-préfectures seront ajoutées dans une prochaine mise à jour.",
+    items:[
+      {n:"Abidjan",v:6321017},{n:"Attiégouakro",v:49513},{n:"Yamoussoukro",v:372559},{n:"San-Pédro",v:790242},
+      {n:"Tabou",v:270482},{n:"Buyo",v:176568},{n:"Guéyo",v:102213},{n:"Méagui",v:299251},{n:"Soubré",v:587441},
+      {n:"Fresco",v:107752},{n:"Sassandra",v:353228},{n:"Abengourou",v:430539},{n:"Agnibilékrou",v:216264},
+      {n:"Bettié",v:69640},{n:"Aboisso",v:361842},{n:"Adiaké",v:88006},{n:"Grand-Bassam",v:267103},{n:"Tiapoum",v:67941},
+      {n:"Kaniasso",v:84572},{n:"Minignan",v:61637},{n:"Gbéléban",v:29532},{n:"Madinani",v:50248},{n:"Odienné",v:156730},
+      {n:"Samatiguila",v:19710},{n:"Séguélon",v:33585},{n:"Gagnoa",v:724496},{n:"Oumé",v:260786},{n:"Divo",v:571688},
+      {n:"Guitry",v:197236},{n:"Lakota",v:334235},{n:"Didiévi",v:93629},{n:"Djékanou",v:37281},{n:"Tiébissou",v:116321},
+      {n:"Toumodi",v:168363},{n:"Daoukro",v:148095},{n:"M'Bahiakro",v:78369},{n:"Ouellé",v:56501},{n:"Prikro",v:95595},
+      {n:"Bocanda",v:121469},{n:"Dimbokro",v:102192},{n:"Kouassi-Kouassikro",v:30962},{n:"Arrah",v:103846},
+      {n:"Bongouanou",v:193158},{n:"M'Batto",v:142750},{n:"Adzopé",v:283727},{n:"Akoupé",v:156698},{n:"Alépé",v:180253},
+      {n:"Yakassé-Attobrou",v:105986},{n:"Agboville",v:384340},{n:"Sikensi",v:125897},{n:"Taabo",v:76761},
+      {n:"Tiassalé",v:278954},{n:"Dabou",v:213582},{n:"Grand-Lahou",v:155832},{n:"Jacqueville",v:80593},
+      {n:"Biankouma",v:238714},{n:"Danané",v:364012},{n:"Man",v:461135},{n:"Sipilou",v:73109},{n:"Zouan-Hounien",v:250938},
+      {n:"Bloléquin",v:237944},{n:"Guiglo",v:259381},{n:"Taï",v:117387},{n:"Toulépleu",v:93529},{n:"Bangolo",v:270629},
+      {n:"Duékoué",v:420911},{n:"Facobly",v:94610},{n:"Kouibly",v:144723},{n:"Daloa",v:705378},{n:"Issia",v:410628},
+      {n:"Vavoua",v:477154},{n:"Zoukougbeu",v:146537},{n:"Bonon",v:167397},{n:"Bouaflé",v:300305},{n:"Gohitafla",v:83370},
+      {n:"Sinfra",v:245226},{n:"Zuénoula",v:184882},{n:"Boundiali",v:198541},{n:"Kouto",v:175587},{n:"Tengréla",v:141761},
+      {n:"Dikodougou",v:102115},{n:"Korhogo",v:748393},{n:"Sinématiali",v:74981},{n:"M'Bengué",v:114971},
+      {n:"Ferkessédougou",v:190141},{n:"Kong",v:118304},{n:"Ouangolodougou",v:294639},{n:"Bouaké",v:931851},
+      {n:"Béoumi",v:195015},{n:"Botro",v:117924},{n:"Sakassou",v:108110},{n:"Dabakala",v:254430},{n:"Katiola",v:162472},
+      {n:"Niakaramadougou",v:195127},{n:"Touba",v:120524},{n:"Koro",v:76345},{n:"Ouaninou",v:65981},{n:"Mankono",v:271894},
+      {n:"Kounahiri",v:101111},{n:"Dianra",v:119146},{n:"Séguéla",v:298384},{n:"Kani",v:131428},{n:"Bouna",v:178081},
+      {n:"Doropo",v:93386},{n:"Nassian",v:71724},{n:"Tehini",v:83846},{n:"Bondoukou",v:453841},{n:"Koun-Fao",v:167881},
+      {n:"Sandégué",v:69742},{n:"Transua",v:112842},{n:"Tanda",v:113523}
+    ]}
+};
+let demoLevel="dis", demoQ="";
+function renderDemo(){
+  const d=demo[demoLevel];
+  const q=demoQ.trim().toLowerCase();
+  const items=d.items.filter(i=>!q||i.n.toLowerCase().includes(q));
+  const max=Math.max(...d.items.map(i=>i.v));
+  const sorted=[...items].sort((a,b)=>b.v-a.v);
+  document.getElementById("demo-list").innerHTML = sorted.length ? sorted.map((it,i)=>`
+    <div class="dem-row" style="--i:${Math.min(i,12)}">
+      <div class="nm">${esc(it.n)}${it.s?`<small>${esc(it.s)}</small>`:""}</div>
+      <div class="bar"><i data-w="${(it.v/max*100).toFixed(1)}%" style="--w:0%"></i></div>
+      <div class="val">${fmtN(it.v)}<small>${fmtP(it.v)} du total</small></div>
+    </div>`).join("")
+    : `<div class="empty">Aucune localité ne correspond à votre recherche.</div>`;
+  document.getElementById("demo-note").textContent=`${d.note} (${items.length} sur ${d.items.length} affichés)`;
+  requestAnimationFrame(()=>document.querySelectorAll(".bar i").forEach(b=>b.style.setProperty("--w",b.dataset.w)));
+}
+document.getElementById("levels").addEventListener("click",e=>{
+  const b=e.target.closest(".chip"); if(!b) return;
+  document.querySelectorAll("#levels .chip").forEach(c=>{const on=c===b;c.classList.toggle("on",on);c.setAttribute("aria-pressed",on);});
+  demoLevel=b.dataset.l; renderDemo();
+});
+document.getElementById("dq").addEventListener("input",e=>{demoQ=e.target.value; renderDemo();});
+renderDemo();
+
+/* ---------- Données à jour : data/demographie.json (repli sur les valeurs intégrées) ---------- */
+fetch("data/demographie.json",{cache:"no-cache"})
+  .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+  .then(j=>{
+    if(j.levels) demo=j.levels;
+    if(j.meta) document.getElementById("demo-source").textContent=
+      `Source : ${j.meta.source}. Données mises à jour le ${j.meta.updated_at}.`;
+    renderDemo();
+  })
+  .catch(()=>{});
+
+/* ---------- Commodités (data/commodites.geojson, OpenStreetMap) ---------- */
+const COM_CATS={
+  sante:{l:"Santé",c:"#e0492f"}, education:{l:"Éducation",c:"#2f7a4f"}, alimentation:{l:"Alimentation",c:"#e07a1f"},
+  finance:{l:"Banque & finance",c:"#3a6ea5"}, securite:{l:"Sécurité",c:"#6b4fa0"}, transport:{l:"Transport & carburant",c:"#9a9f3b"},
+  administration:{l:"Administration",c:"#7c8796"}, eau:{l:"Eau potable",c:"#1fa3c4"}, culte:{l:"Lieux de culte",c:"#a0523d"},
+  culture:{l:"Culture & loisirs",c:"#c04f8a"}
+};
+if(window.L){
+  const comMap=L.map("commap",{scrollWheelZoom:false}).setView([7.5,-5.5],6);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors",maxZoom:18}).addTo(comMap);
+  const group=L.markerClusterGroup?L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45}):L.layerGroup();
+  group.addTo(comMap);
+  const note=document.getElementById("com-note"), chips=document.getElementById("com-chips");
+  const active=new Set(Object.keys(COM_CATS));
+  let feats=[], updated="";
+
+  function draw(){
+    group.clearLayers();
+    const shown=feats.filter(f=>active.has(f.properties.cat));
+    const layers=shown.map(f=>{
+      const [lo,la]=f.geometry.coordinates, p=f.properties, cat=COM_CATS[p.cat];
+      return L.circleMarker([la,lo],{radius:6,color:"#fff",weight:1,fillColor:cat.c,fillOpacity:.9})
+        .bindPopup(`<strong>${esc(p.name||"Sans nom")}</strong><br>${esc(cat.l)}${p.type?" · "+esc(p.type):""}`);
+    });
+    if(L.markerClusterGroup) group.addLayers(layers); else layers.forEach(l=>group.addLayer(l));
+    note.textContent=`${shown.length.toLocaleString("fr-FR")} équipements affichés sur ${feats.length.toLocaleString("fr-FR")}. `+
+      `Données © contributeurs OpenStreetMap (ODbL)${updated?", mises à jour le "+updated:""}.`;
+  }
+
+  chips.addEventListener("click",e=>{
+    const b=e.target.closest(".chip"); if(!b||!b.dataset.c) return;
+    const k=b.dataset.c, on=!active.has(k);
+    on?active.add(k):active.delete(k);
+    b.classList.toggle("on",on); b.setAttribute("aria-pressed",on);
+    draw();
+  });
+
+  fetch("data/commodites.geojson",{cache:"no-cache"})
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(j=>{
+      feats=j.features||[];
+      if(!feats.length){ note.textContent="Données en cours de génération."; return; }
+      updated=(j.meta&&j.meta.updated_at)||"";
+      const counts={};
+      feats.forEach(f=>counts[f.properties.cat]=(counts[f.properties.cat]||0)+1);
+      chips.innerHTML=Object.keys(COM_CATS).filter(k=>counts[k]).map(k=>
+        `<button class="chip on" data-c="${k}" aria-pressed="true"><span class="dot" style="background:${COM_CATS[k].c}"></span>${esc(COM_CATS[k].l)}<span class="com-count">${counts[k].toLocaleString("fr-FR")}</span></button>`
+      ).join("");
+      draw();
+    })
+    .catch(()=>{ note.textContent="Données non disponibles pour le moment."; });
+}
+
+/* ---------- Carte ---------- */
+if(window.L){
+  const map=L.map("map",{zoomControl:false,attributionControl:true,scrollWheelZoom:false}).setView([7.5,-5.5],6);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors",maxZoom:18}).addTo(map);
+  L.control.zoom({position:"topright"}).addTo(map);
+  const cities=[["Abidjan",5.36,-4.01],["Yamoussoukro",6.82,-5.28],["Bouaké",7.69,-5.03],["San-Pédro",4.75,-6.64],["Korhogo",9.46,-5.63],["Daloa",6.88,-6.45],["Man",7.41,-7.55]];
+  cities.forEach(([n,la,lo])=>L.circleMarker([la,lo],{radius:n==="Abidjan"?9:6,color:"#e07a1f",fillColor:"#f29a45",fillOpacity:.8,weight:2}).addTo(map).bindTooltip(n));
+  L.polyline([[5.36,-4.01],[6.82,-5.28],[7.69,-5.03],[9.46,-5.63]],{color:"#f4efe4",weight:2,opacity:.6,dashArray:"6 6"}).addTo(map);
+  L.polyline([[5.36,-4.01],[4.75,-6.64]],{color:"#f4efe4",weight:2,opacity:.6,dashArray:"6 6"}).addTo(map);
+  if(!reduceMotion) setTimeout(()=>map.flyTo([5.34,-4.02],11,{duration:3}),1800);
+}
+</script>
+</body>
+</html>
